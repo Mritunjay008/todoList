@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Calendar, Tag, Edit3, Trash2, Clock } from 'lucide-react';
+import { Check, Calendar, Tag, Edit3, Trash2 } from 'lucide-react';
 
 export default function TodoItem({ todo, onToggle, onEdit, onDelete }) {
   const { id, title, description, isCompleted, priority, dueDate, category, tags } = todo;

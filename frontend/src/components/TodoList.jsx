@@ -4,7 +4,6 @@ import { Plus, CheckCircle, SearchX } from 'lucide-react';
 
 export default function TodoList({
   todos,
-  isLoading,
   onToggle,
   onEdit,
   onDelete,

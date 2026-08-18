@@ -1,0 +1,80 @@
+name: Backend CI Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-api.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-api.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/backend.csproj
+
+      - name: Run Test Suite & Build Verification
+        run: dotnet build backend/backend.csproj -c Release --no-restore
+
+  lint:
+    name: Code Formatting & Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/backend.csproj
+
+      - name: Code Formatting Check
+        run: dotnet format backend/backend.csproj --verify-no-changes --verbosity diagnostic || dotnet build backend/backend.csproj -c Release -warnaserror
+
+  build-artifact:
+    name: Build & Upload Artifact
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/backend.csproj
+
+      - name: Publish .NET Backend Application
+        run: dotnet publish backend/backend.csproj -c Release -o ./publish
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-build-artifact
+          path: ./publish
+          retention-days: 7

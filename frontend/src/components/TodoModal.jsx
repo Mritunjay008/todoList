@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Plus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Save } from 'lucide-react';
 
 export default function TodoModal({
   isOpen,
@@ -56,6 +56,30 @@ export default function TodoModal({
     setError('');
   }, [initialData, isOpen, categories]);
 
+  const handleSubmit = useCallback(
+    (e) => {
+      if (e) e.preventDefault();
+      if (!title.trim()) {
+        setError('Task title is required.');
+        return;
+      }
+
+      const finalCategory = isCustomCat ? customCategory.trim() || 'General' : category;
+
+      const payload = {
+        title: title.trim(),
+        description: description.trim() || null,
+        priority,
+        category: finalCategory,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        tags: tags.trim() || null,
+      };
+
+      onSubmit(payload);
+    },
+    [title, description, priority, category, isCustomCat, customCategory, dueDate, tags, onSubmit]
+  );
+
   // Handle escape & ctrl+enter
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -68,30 +92,9 @@ export default function TodoModal({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, title, description, priority, category, isCustomCat, customCategory, dueDate, tags]);
+  }, [isOpen, onClose, handleSubmit]);
 
   if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!title.trim()) {
-      setError('Task title is required.');
-      return;
-    }
-
-    const finalCategory = isCustomCat ? (customCategory.trim() || 'General') : category;
-
-    const payload = {
-      title: title.trim(),
-      description: description.trim() || null,
-      priority,
-      category: finalCategory,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-      tags: tags.trim() || null,
-    };
-
-    onSubmit(payload);
-  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>

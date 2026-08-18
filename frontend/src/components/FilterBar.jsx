@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Trash2, ArrowUpDown, Tag } from 'lucide-react';
+import { Search, X, Trash2, ArrowUpDown } from 'lucide-react';
 
 export default function FilterBar({
   search,

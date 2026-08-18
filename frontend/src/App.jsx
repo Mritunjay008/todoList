@@ -252,17 +252,17 @@ export default function App() {
       loadData();
     } catch {
       addToast('Status updated', 'info');
-      setStats((prev) => computeLocalStats(todos));
+      setStats(computeLocalStats(todos));
     }
   };
 
   const handleCreate = async (payload) => {
     try {
-      const created = await api.createTodo(payload);
+      await api.createTodo(payload);
       addToast('New task added successfully', 'success');
       setModal({ isOpen: false, data: null });
       loadData();
-    } catch (err) {
+    } catch {
       // Fallback local creation
       const localItem = {
         id: Date.now(),
@@ -292,7 +292,7 @@ export default function App() {
       addToast('Task updated successfully', 'success');
       setModal({ isOpen: false, data: null });
       loadData();
-    } catch (err) {
+    } catch {
       setTodos((prev) =>
         prev.map((t) => (t.id === modal.data.id ? { ...t, ...payload } : t))
       );

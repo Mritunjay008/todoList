@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Moon, Sun, Plus, Server, RefreshCw } from 'lucide-react';
+import { CheckSquare, Moon, Sun, Plus, RefreshCw } from 'lucide-react';
 
 export default function Navbar({
   theme,
