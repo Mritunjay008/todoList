@@ -1,0 +1,15 @@
+{
+  "name": "taskflow-fullstack-app",
+  "version": "1.0.0",
+  "description": "Full-stack Todo application with React 19 frontend and .NET 8 Web API backend",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "dev:backend": "dotnet run --project backend --urls http://localhost:5044",
+    "build:backend": "dotnet build backend",
+    "test:backend": "dotnet test backend"
+  },
+  "keywords": ["react", "dotnet", "webapi", "sqlite", "todo-list", "taskflow"],
+  "author": "Antigravity",
+  "license": "MIT"
+}
