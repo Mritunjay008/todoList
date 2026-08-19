@@ -19,6 +19,38 @@ public class TodosController : ControllerBase
         _logger = logger;
     }
 
+    private string GetProviderName()
+    {
+        var provider = _context.Database.ProviderName ?? "";
+        return provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) 
+            ? "Azure SQL Server" 
+            : "SQLite";
+    }
+
+    // GET: api/todos/health
+    [HttpGet("health")]
+    public async Task<ActionResult<object>> GetHealth()
+    {
+        bool dbHealthy = false;
+        try
+        {
+            dbHealthy = await _context.Database.CanConnectAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Database connection check failed.");
+        }
+
+        return Ok(new
+        {
+            status = "Healthy",
+            api = "TaskFlow .NET 8 API",
+            databaseConnected = dbHealthy,
+            databaseProvider = GetProviderName(),
+            timestamp = DateTime.UtcNow
+        });
+    }
+
     // GET: api/todos
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodos(
@@ -252,6 +284,8 @@ public class TodosController : ControllerBase
             OverdueTasks = overdue,
             HighOrUrgentTasks = highOrUrgent,
             CompletionRatePercentage = rate,
+            DatabaseProvider = GetProviderName(),
+            DatabaseConnected = true,
             TasksByCategory = categoryMap,
             TasksByPriority = priorityMap
         };

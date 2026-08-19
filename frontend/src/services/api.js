@@ -97,4 +97,10 @@ export const api = {
     if (!res.ok) throw new Error('Failed to fetch categories');
     return res.json();
   },
+
+  async getHealth() {
+    const res = await fetch(`${API_BASE}/health`);
+    if (!res.ok) throw new Error('Failed to fetch health');
+    return res.json();
+  },
 };

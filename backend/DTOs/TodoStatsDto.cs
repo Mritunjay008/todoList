@@ -8,6 +8,8 @@ public class TodoStatsDto
     public int OverdueTasks { get; set; }
     public int HighOrUrgentTasks { get; set; }
     public double CompletionRatePercentage { get; set; }
+    public string DatabaseProvider { get; set; } = "SQLite";
+    public bool DatabaseConnected { get; set; } = true;
     public Dictionary<string, int> TasksByCategory { get; set; } = new();
     public Dictionary<string, int> TasksByPriority { get; set; } = new();
 }

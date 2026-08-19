@@ -282,6 +282,10 @@ button {
   color: var(--text-secondary);
 }
 
+.db-status-pill {
+  border-color: var(--border-strong);
+}
+
 .status-dot {
   width: 7px;
   height: 7px;

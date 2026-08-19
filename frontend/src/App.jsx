@@ -84,6 +84,7 @@ export default function App() {
   });
   const [categories, setCategories] = useState(['Work', 'Personal', 'Shopping', 'Learning', 'Health', 'Design', 'General']);
   const [backendOnline, setBackendOnline] = useState(true);
+  const [dbStatus, setDbStatus] = useState({ connected: true, provider: 'SQLite' });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -133,6 +134,8 @@ export default function App() {
       overdueTasks: overdue,
       highOrUrgentTasks: highOrUrgent,
       completionRatePercentage: rate,
+      databaseProvider: 'Local (Offline)',
+      databaseConnected: false,
     };
   };
 
@@ -158,6 +161,10 @@ export default function App() {
 
       if (statsData) {
         setStats(statsData);
+        setDbStatus({
+          connected: statsData.databaseConnected ?? true,
+          provider: statsData.databaseProvider || 'SQLite',
+        });
       } else {
         setStats(computeLocalStats(todosData));
       }
@@ -172,6 +179,7 @@ export default function App() {
     } catch (err) {
       console.warn('API unavailable, operating in local mode:', err.message);
       setBackendOnline(false);
+      setDbStatus({ connected: false, provider: 'Offline' });
       // Filter locally
       setTodos((prev) => {
         let filtered = [...prev];
@@ -338,6 +346,7 @@ export default function App() {
         theme={theme}
         toggleTheme={toggleTheme}
         backendOnline={backendOnline}
+        dbStatus={dbStatus}
         isRefreshing={isRefreshing}
         onRefresh={() => loadData(true)}
         onOpenCreateModal={() => setModal({ isOpen: true, data: null })}

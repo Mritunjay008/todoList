@@ -1,14 +1,18 @@
 import React from 'react';
-import { CheckSquare, Moon, Sun, Plus, RefreshCw } from 'lucide-react';
+import { CheckSquare, Moon, Sun, Plus, RefreshCw, Database } from 'lucide-react';
 
 export default function Navbar({
   theme,
   toggleTheme,
   backendOnline,
+  dbStatus,
   isRefreshing,
   onRefresh,
   onOpenCreateModal,
 }) {
+  const isDbConnected = backendOnline && dbStatus?.connected;
+  const dbProvider = dbStatus?.provider || 'SQLite';
+
   return (
     <header className="navbar">
       <div className="navbar-inner">
@@ -27,7 +31,7 @@ export default function Navbar({
 
         {/* Action controls */}
         <div className="nav-actions">
-          {/* Backend Health Status */}
+          {/* Backend API Health Status */}
           <div
             className="status-pill"
             title={backendOnline ? '.NET Web API Connected' : 'Connecting to .NET Web API...'}
@@ -38,6 +42,24 @@ export default function Navbar({
               }`}
             />
             <span>{backendOnline ? 'API Connected' : 'Offline Mode'}</span>
+          </div>
+
+          {/* Database Health Status */}
+          <div
+            className="status-pill db-status-pill"
+            title={
+              isDbConnected
+                ? `Connected to ${dbProvider}`
+                : 'Database disconnected / Offline fallback'
+            }
+          >
+            <Database size={13} style={{ opacity: 0.8 }} />
+            <span
+              className={`status-dot ${
+                isRefreshing ? 'loading' : isDbConnected ? 'online' : 'offline'
+              }`}
+            />
+            <span>{isDbConnected ? dbProvider : 'DB Offline'}</span>
           </div>
 
           {/* Refresh Button */}

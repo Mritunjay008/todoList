@@ -3,12 +3,34 @@ using TodoApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=todos.db";
-builder.Services.AddDbContext<TodoDbContext>(options =>
-    options.UseSqlite(connectionString));
+// Determine database connection string (Azure SQL or SQLite)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? builder.Configuration.GetConnectionString("AzureSqlConnection")
+    ?? "Data Source=todos.db";
 
-// Configure CORS for React frontend (Vite dev server on 5173, etc.)
+var isSqlServer = connectionString.Contains("database.windows.net", StringComparison.OrdinalIgnoreCase) ||
+                  connectionString.Contains("Server=tcp:", StringComparison.OrdinalIgnoreCase) ||
+                  connectionString.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase);
+
+builder.Services.AddDbContext<TodoDbContext>(options =>
+{
+    if (isSqlServer)
+    {
+        options.UseSqlServer(connectionString, sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        });
+    }
+    else
+    {
+        options.UseSqlite(connectionString);
+    }
+});
+
+// Configure CORS for React frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -25,14 +47,22 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Auto-migrate / ensure database and seed data exists
+// Ensure database and tables exist
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TodoDbContext>();
-    db.Database.EnsureCreated();
+    try
+    {
+        db.Database.EnsureCreated();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while creating/migrating the database.");
+    }
 }
 
-// Configure the HTTP request pipeline.
+// Configure HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -40,9 +70,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
