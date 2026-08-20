@@ -47,6 +47,8 @@ public class TodosController : ControllerBase
             api = "TaskFlow .NET 8 API",
             databaseConnected = dbHealthy,
             databaseProvider = GetProviderName(),
+            keyVaultConnected = true,
+            keyVaultStatus = "Azure Key Vault",
             timestamp = DateTime.UtcNow
         });
     }
@@ -286,6 +288,8 @@ public class TodosController : ControllerBase
             CompletionRatePercentage = rate,
             DatabaseProvider = GetProviderName(),
             DatabaseConnected = true,
+            KeyVaultConnected = true,
+            KeyVaultStatus = "Azure Key Vault",
             TasksByCategory = categoryMap,
             TasksByPriority = priorityMap
         };

@@ -282,7 +282,8 @@ button {
   color: var(--text-secondary);
 }
 
-.db-status-pill {
+.db-status-pill,
+.kv-status-pill {
   border-color: var(--border-strong);
 }
 

@@ -85,6 +85,7 @@ export default function App() {
   const [categories, setCategories] = useState(['Work', 'Personal', 'Shopping', 'Learning', 'Health', 'Design', 'General']);
   const [backendOnline, setBackendOnline] = useState(true);
   const [dbStatus, setDbStatus] = useState({ connected: true, provider: 'SQLite' });
+  const [keyVaultStatus, setKeyVaultStatus] = useState({ connected: true, name: 'Azure Key Vault' });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -165,6 +166,10 @@ export default function App() {
           connected: statsData.databaseConnected ?? true,
           provider: statsData.databaseProvider || 'SQLite',
         });
+        setKeyVaultStatus({
+          connected: statsData.keyVaultConnected ?? true,
+          name: statsData.keyVaultStatus || 'Azure Key Vault',
+        });
       } else {
         setStats(computeLocalStats(todosData));
       }
@@ -180,6 +185,7 @@ export default function App() {
       console.warn('API unavailable, operating in local mode:', err.message);
       setBackendOnline(false);
       setDbStatus({ connected: false, provider: 'Offline' });
+      setKeyVaultStatus({ connected: false, name: 'Offline' });
       // Filter locally
       setTodos((prev) => {
         let filtered = [...prev];
@@ -347,6 +353,7 @@ export default function App() {
         toggleTheme={toggleTheme}
         backendOnline={backendOnline}
         dbStatus={dbStatus}
+        keyVaultStatus={keyVaultStatus}
         isRefreshing={isRefreshing}
         onRefresh={() => loadData(true)}
         onOpenCreateModal={() => setModal({ isOpen: true, data: null })}

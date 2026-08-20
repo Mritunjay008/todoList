@@ -1,17 +1,20 @@
 import React from 'react';
-import { CheckSquare, Moon, Sun, Plus, RefreshCw, Database } from 'lucide-react';
+import { CheckSquare, Moon, Sun, Plus, RefreshCw, Database, Key } from 'lucide-react';
 
 export default function Navbar({
   theme,
   toggleTheme,
   backendOnline,
   dbStatus,
+  keyVaultStatus,
   isRefreshing,
   onRefresh,
   onOpenCreateModal,
 }) {
   const isDbConnected = backendOnline && dbStatus?.connected;
   const dbProvider = dbStatus?.provider || 'SQLite';
+  const isKeyVaultActive = backendOnline && keyVaultStatus?.connected;
+  const kvName = keyVaultStatus?.name || 'Azure Key Vault';
 
   return (
     <header className="navbar">
@@ -60,6 +63,24 @@ export default function Navbar({
               }`}
             />
             <span>{isDbConnected ? dbProvider : 'DB Offline'}</span>
+          </div>
+
+          {/* Azure Key Vault Status */}
+          <div
+            className="status-pill kv-status-pill"
+            title={
+              isKeyVaultActive
+                ? `Secrets secured via ${kvName} (Managed Identity)`
+                : 'Key Vault Offline / Local Config'
+            }
+          >
+            <Key size={13} style={{ opacity: 0.8 }} />
+            <span
+              className={`status-dot ${
+                isRefreshing ? 'loading' : isKeyVaultActive ? 'online' : 'offline'
+              }`}
+            />
+            <span>{isKeyVaultActive ? 'Key Vault' : 'KV Offline'}</span>
           </div>
 
           {/* Refresh Button */}

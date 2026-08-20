@@ -10,6 +10,8 @@ public class TodoStatsDto
     public double CompletionRatePercentage { get; set; }
     public string DatabaseProvider { get; set; } = "SQLite";
     public bool DatabaseConnected { get; set; } = true;
+    public bool KeyVaultConnected { get; set; } = true;
+    public string KeyVaultStatus { get; set; } = "Azure Key Vault";
     public Dictionary<string, int> TasksByCategory { get; set; } = new();
     public Dictionary<string, int> TasksByPriority { get; set; } = new();
 }
