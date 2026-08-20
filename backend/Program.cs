@@ -4,19 +4,24 @@ using TodoApi.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Determine database connection string (Azure SQL or SQLite)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? builder.Configuration.GetConnectionString("AzureSqlConnection")
+    ?? builder.Configuration["ConnectionStrings:DefaultConnection"]
+    ?? builder.Configuration["SQLAZURECONNSTR_DefaultConnection"]
     ?? "Data Source=todos.db";
 
-var isSqlServer = connectionString.Contains("database.windows.net", StringComparison.OrdinalIgnoreCase) ||
-                  connectionString.Contains("Server=tcp:", StringComparison.OrdinalIgnoreCase) ||
-                  connectionString.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase);
+// Detect if Azure SQL Server or Key Vault Reference
+var isSqlServer = rawConnectionString.Contains("database.windows.net", StringComparison.OrdinalIgnoreCase) ||
+                  rawConnectionString.Contains("Server=tcp:", StringComparison.OrdinalIgnoreCase) ||
+                  rawConnectionString.Contains("Initial Catalog=", StringComparison.OrdinalIgnoreCase);
+
+var isKeyVaultReference = rawConnectionString.StartsWith("@Microsoft.KeyVault", StringComparison.OrdinalIgnoreCase);
 
 builder.Services.AddDbContext<TodoDbContext>(options =>
 {
     if (isSqlServer)
     {
-        options.UseSqlServer(connectionString, sqlOptions =>
+        options.UseSqlServer(rawConnectionString, sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
@@ -26,7 +31,12 @@ builder.Services.AddDbContext<TodoDbContext>(options =>
     }
     else
     {
-        options.UseSqlite(connectionString);
+        // Safe SQLite fallback if local or unresolved
+        var sqliteConn = isKeyVaultReference || !rawConnectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase)
+            ? "Data Source=todos.db"
+            : rawConnectionString;
+
+        options.UseSqlite(sqliteConn);
     }
 });
 
@@ -51,13 +61,14 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<TodoDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
         db.Database.EnsureCreated();
+        logger.LogInformation("Database initialized successfully.");
     }
     catch (Exception ex)
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while creating/migrating the database.");
     }
 }
