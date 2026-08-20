@@ -17,6 +17,7 @@
    - [Phase 6: Azure SQL Database (PaaS Private Endpoint) Setup](#phase-6-azure-sql-database-paas-private-endpoint-setup)
    - [Phase 7: End-to-End Verification](#phase-7-end-to-end-verification)
 5. [Configuration & Environment Variables Reference](#-configuration--environment-variables-reference)
+6. [🎤 Lead Walkthrough Script & Presentation Notes](#-lead-walkthrough-script--presentation-notes)
 
 ---
 
@@ -89,7 +90,7 @@ Below is the complete troubleshooting log of every issue encountered during this
 | **3** | Deployed Frontend site was blank / showing default Azure hosting page | Azure Linux Node.js App Service expects an entrypoint (`server.js` / `package.json`) or static web server config to serve SPA `index.html`. | Created zero-dependency `server.js` and `package.json` in `frontend/public/` so Vite bundles them directly into `dist/`. |
 | **4** | Backend CI/CD pipeline did not trigger automatically on Git push | `ci-api.yml` had a `paths: ['backend/**', '.github/workflows/ci-api.yml']` filter. Previous commit only touched `frontend/`. | Expected behavior. Triggered workflow manually via GitHub Actions **"Run workflow"** button, or pushed a commit modifying `backend/`. |
 | **5** | `Ip Forbidden (CODE: 403) - Failed to deploy web package using OneDeploy to App Service` | Backend Web App had Public Network Access disabled, which blocked GitHub Actions public runners from reaching the SCM deployment site. | In Backend Web App **Networking ➔ Public network access**: Selected **"Enabled from selected virtual networks and IP addresses"**, set Main site to **Deny**, and uncoupled SCM / Advanced tool site with **Allow**. |
-| **6** | `502 Bad Gateway` on `/api/todos` requests from frontend | Frontend App Service was trying to resolve the backend's private domain using public DNS instead of Azure internal VNet DNS. | Added two Application Settings to Frontend Web App:<br>1. `WEBSITE_VNET_ROUTE_ALL` = `1`<br>2. `WEBSITE_DNS_SERVER` = `168.63.129.16` |
+| **6** | `502 Bad Gateway` on `/api/todos` requests from frontend | Frontend App Service was trying to resolve the backend's private domain using public DNS instead of Azure's internal Private DNS resolver. | Added two Application Settings to Frontend Web App:<br>1. `WEBSITE_VNET_ROUTE_ALL` = `1`<br>2. `WEBSITE_DNS_SERVER` = `168.63.129.16` |
 | **7** | Local backend build failure: `The file is locked by backend (PID)` | An earlier background local .NET process was holding a file lock on `backend.exe`. | Ran `Stop-Process -Id <PID> -Force` to kill the zombie process and re-ran `dotnet build`. |
 | **8** | Forgotten SQL Admin username and password | User was unsure of the credentials entered during SQL server wizard creation. | Navigated to **SQL servers ➔ Overview** to find the Server Admin username, and clicked **"Reset password"** on the top toolbar to set a new password. |
 
@@ -310,6 +311,16 @@ Create `.gitignore` at the project root:
 | `AZURE_FRONTEND_PUBLISH_PROFILE` | Publish profile XML content of Frontend Web App |
 | `AZURE_BACKEND_APP_NAME` | Name of Backend Web App |
 | `AZURE_BACKEND_PUBLISH_PROFILE` | Publish profile XML content of Backend Web App |
+
+---
+
+## 🎤 Lead Walkthrough Script & Presentation Notes
+
+### Quick Pitch:
+> *"We built an enterprise 3-tier Zero-Trust architecture on Azure where the Public React 19 Frontend securely reverse-proxies `/api/*` calls into an Azure Virtual Network (`todo-vnet`). Both the ASP.NET Core 8 Web API and Azure SQL Database are locked behind Private Endpoints with zero public internet exposure, backed by automated GitHub Actions CI/CD pipelines."*
+
+### Why `backend-egress-subnet` was Created:
+> *"In Azure, an App Service cannot mix an Inbound Private Endpoint door and an Outbound VNet Integration highway in the exact same subnet. `backend-subnet` is dedicated to receiving inbound traffic, while egress requires a subnet delegated to `Microsoft.Web/serverFarms`."*
 
 ---
 *Created with ❤️ by Antigravity Assistant • Ready for production reproduction.*
