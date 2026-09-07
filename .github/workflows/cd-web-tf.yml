@@ -1,6 +1,11 @@
 name: Terraform Frontend CD Pipeline
 
 on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/cd-web-tf.yml'
   workflow_dispatch:
 
 jobs:
