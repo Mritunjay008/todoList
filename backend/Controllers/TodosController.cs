@@ -11,11 +11,13 @@ namespace TodoApi.Controllers;
 public class TodosController : ControllerBase
 {
     private readonly TodoDbContext _context;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<TodosController> _logger;
 
-    public TodosController(TodoDbContext context, ILogger<TodosController> logger)
+    public TodosController(TodoDbContext context, IConfiguration configuration, ILogger<TodosController> logger)
     {
         _context = context;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -25,6 +27,29 @@ public class TodosController : ControllerBase
         return provider.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) 
             ? "Azure SQL Server" 
             : "SQLite";
+    }
+
+    private (bool isConnected, string statusName) GetKeyVaultDetails()
+    {
+        var vaultName = _configuration["KEY_VAULT_NAME"] 
+            ?? _configuration["KeyVault:Name"] 
+            ?? _configuration["AZURE_KEY_VAULT_NAME"];
+
+        var rawConn = _configuration.GetConnectionString("DefaultConnection") 
+            ?? _configuration["ConnectionStrings:DefaultConnection"] 
+            ?? "";
+
+        if (rawConn.StartsWith("@Microsoft.KeyVault", StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "Key Vault (Unresolved)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(vaultName))
+        {
+            return (true, vaultName);
+        }
+
+        return (false, "Not Configured");
     }
 
     // GET: api/todos/health
@@ -41,14 +66,16 @@ public class TodosController : ControllerBase
             _logger.LogWarning(ex, "Database connection check failed.");
         }
 
+        var (kvConnected, kvStatus) = GetKeyVaultDetails();
+
         return Ok(new
         {
             status = "Healthy",
             api = "TaskFlow .NET 8 API",
             databaseConnected = dbHealthy,
             databaseProvider = GetProviderName(),
-            keyVaultConnected = true,
-            keyVaultStatus = "Azure Key Vault",
+            keyVaultConnected = kvConnected,
+            keyVaultStatus = kvStatus,
             timestamp = DateTime.UtcNow
         });
     }
@@ -278,6 +305,8 @@ public class TodosController : ControllerBase
             .GroupBy(t => string.IsNullOrWhiteSpace(t.Priority) ? "Medium" : t.Priority)
             .ToDictionary(g => g.Key, g => g.Count());
 
+        var (kvConnected, kvStatus) = GetKeyVaultDetails();
+
         var stats = new TodoStatsDto
         {
             TotalTasks = total,
@@ -288,8 +317,8 @@ public class TodosController : ControllerBase
             CompletionRatePercentage = rate,
             DatabaseProvider = GetProviderName(),
             DatabaseConnected = true,
-            KeyVaultConnected = true,
-            KeyVaultStatus = "Azure Key Vault",
+            KeyVaultConnected = kvConnected,
+            KeyVaultStatus = kvStatus,
             TasksByCategory = categoryMap,
             TasksByPriority = priorityMap
         };
