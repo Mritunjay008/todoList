@@ -1,0 +1,31 @@
+name: Terraform Frontend CD Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-terraform-frontend:
+    name: Deploy to Terraform Web App (todowebapp-fe)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies & Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Deploy to Azure Web App (todowebapp-fe)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'todowebapp-fe'
+          publish-profile: ${{ secrets.AZURE_TF_FRONTEND_PUBLISH_PROFILE }}
+          package: frontend/dist
