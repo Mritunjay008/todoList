@@ -1,0 +1,36 @@
+name: Terraform Backend CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/cd-api-tf.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-terraform-backend:
+    name: Deploy to Terraform Web App (todowebapp-be)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore backend/backend.csproj
+
+      - name: Publish .NET 8 Web API
+        run: dotnet publish backend/backend.csproj -c Release -o ./publish
+
+      - name: Deploy to Azure Web App (todowebapp-be)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'todowebapp-be'
+          publish-profile: ${{ secrets.AZURE_TF_BACKEND_PUBLISH_PROFILE }}
+          package: ./publish
